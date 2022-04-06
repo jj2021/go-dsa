@@ -39,7 +39,6 @@ func generateGlobalParameters() Parameters {
 
 	// initialize variables
 	params := Parameters{}
-	g := new(big.Int)
 
 	for {
 		// generate q
@@ -64,8 +63,8 @@ func generateGlobalParameters() Parameters {
 
 	fmt.Printf("q: %v\n", params.Q)
 
+	// generate p
 	for i := 0; i < 4*L; i++ {
-		// generate p
 		p, err := rand.Prime(rand.Reader, L)
 		if err != nil {
 			fmt.Printf("Error Generating p: %v", err.Error())
@@ -98,6 +97,29 @@ func generateGlobalParameters() Parameters {
 		params.P = p
 		break
 	}
+
+	// generate value g
+	g := new(big.Int)
+	e := new(big.Int)
+	pSubOne := new(big.Int)
+	hMax := new(big.Int)
+	one := big.NewInt(1)
+	h := new(big.Int)
+
+	pSubOne.Sub(params.P, one)
+	e.Div(pSubOne, params.Q)
+
+	hMax.Sub(pSubOne, one)
+	h, err := rand.Int(rand.Reader, hMax)
+	if err != nil {
+		fmt.Printf("Could not generate random value h\n")
+		return params
+	}
+
+	// ensure h is not zero
+	h.Add(h, one)
+
+	g.Exp(h, e, params.P)
 
 	params.G = g
 
