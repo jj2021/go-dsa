@@ -24,8 +24,57 @@ type privateKey *big.Int
 type publicKey *big.Int
 
 func GenerateKeyPair() KeyPair {
+	var pair KeyPair
 	params := generateGlobalParameters()
-	return KeyPair{Params: params}
+	pair.Params = params
+	x, y := generateKeys(params)
+	pair.Private = x
+	pair.Public = y
+	return pair
+}
+
+func generateKeys(params Parameters) (privateKey, publicKey) {
+	priv := new(big.Int)
+	pub := new(big.Int)
+	/*
+		qbytes := params.Q.Bytes()
+		fmt.Printf("q len: %v\n", len(qbytes))
+		pbytes := params.P.Bytes()
+		fmt.Printf("p len: %v\n", len(pbytes))
+	*/
+
+	// generate rand number of N bits
+	c := new(big.Int)
+	valid := false
+
+	for !valid {
+		n := 20
+		b := make([]byte, n)
+		_, err := rand.Read(b)
+		if err != nil {
+			fmt.Printf("Could not generate random bits: %v\n", err.Error())
+			return priv, pub
+		}
+
+		c.SetBytes(b)
+
+		qSubTwo := new(big.Int)
+		two := big.NewInt(2)
+		qSubTwo.Sub(params.Q, two)
+		if c.Cmp(qSubTwo) != 1 {
+			valid = true
+		}
+	}
+	fmt.Printf("c: %v\n", c)
+
+	// calc priv
+	one := big.NewInt(1)
+	priv.Add(params.Q, one)
+
+	// calc pub
+	pub.Exp(params.G, priv, params.P)
+
+	return priv, pub
 }
 
 func generateGlobalParameters() Parameters {
@@ -35,7 +84,7 @@ func generateGlobalParameters() Parameters {
 	rounds := 40
 	L := 1024
 	N := 160
-	fmt.Printf("L: %v, N: %v\n", L, N)
+	//fmt.Printf("L: %v, N: %v\n", L, N)
 
 	// initialize variables
 	params := Parameters{}
@@ -61,7 +110,7 @@ func generateGlobalParameters() Parameters {
 		break
 	}
 
-	fmt.Printf("q: %v\n", params.Q)
+	//fmt.Printf("q: %v\n", params.Q)
 
 	// generate p
 	for i := 0; i < 4*L; i++ {

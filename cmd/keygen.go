@@ -26,6 +26,8 @@ to quickly create a Cobra application.`,
 		fmt.Println("keygen called")
 		pair := dsa.GenerateKeyPair()
 		fmt.Printf("params: %+v\n", pair.Params)
+		fmt.Printf("Private: %+v\n", pair.Private)
+		fmt.Printf("Public: %+v\n", pair.Public)
 	},
 }
 
