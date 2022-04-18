@@ -7,6 +7,7 @@ April 17, 2022
 # Milestone: Digital Signature Algorithm Exploration
 
 ## Abstract
+
 The Digital Signature Algorithm (DSA) is an algorithm that allows users to digitally
 sign electronic assets or verify a DSA signature. The algorithm is secure 
 enough that it is included in the Federal Information Processing Standard 
@@ -19,6 +20,7 @@ properties 3) Discuss the work that has been completed so far 4) Discuss planned
 features.
 
 ## Introduction
+
 Cryptography is an essential part of modern-day digital communications. 
 Cryptographic techniques are not just used to hide sensitive data, they
 may also be used to create a system for identity in the digital world. 
@@ -38,6 +40,7 @@ Digital Signature Standard. FIPS 186-4 standardizes approved implementations
 of digital signature algorithms for use with data owned by the Federal Government.
 
 ## Related Work
+
 Digital signatures provide three essential properties. They provide the identity 
 of the signatory, integrity of the signed data, and non-repudiation. In 1991, NIST
 created the Digital Signature Standard to standardize the implementation and use of 
@@ -87,4 +90,73 @@ are much larger than 512 bits.
 
 ## Methedology
 
+To increase focus on the implementation of the DSA algorithm, a CLI application
+was created. The application was created in the Go language, allowing it to 
+be compiled and executed on any system of the user's choosing. As of this
+milestone, a command called 'keygen' was created that generates the domain
+parameters and generates a public/private key pair, completing two of the 
+four steps outlined in the process above. 
+
+### Parameter Generation
+
+There are three parameters that must be generated in the DSA process. These
+three parameters are named *p, q,* and *g*. The lengths of parameters *p* and
+*q* must be part of an approved set of lengths specified in FIPS 186-4. In 
+order to be compatible with the SHA-1 hash function, the lengths of 1024 bits
+and 160 bits were chosen for *p* and *q* respectively. These values are chosen
+by a random number generator and checked for primality with the Miller-Rabin
+primality check. The only other restriction on these numbers is that *q* must
+be a divisor of *p-1*. This is ensured by first generating the random prime
+*q*, then generating a random prime *R* and deriving *p* from the formula below.
+
+*q* | *p*-1
+
+*p*-1 = *qx*+0
+
+*p* = *qx*+1
+
+*R* = *qx*+*r*
+
+*R*-*p* = *y*
+
+(*qx*+*r*)-(*qx*+1) = *y*
+
+*r*-1 = *y*
+
+*R*-*y* = *p*
+
+If the computed *p* value does not pass the Miller-Rabin primality test, it is
+generated again from a new random *R* value until it passes.
+
+The value *g* (also known as the generator) is generated such that it is in a 
+subgroup of *q* in the multiplicative group GF(*p*) and 1 < *g* < *p*.
+
+### Key Pair Generation
+
+Compared to the parameter generation, the public/private key pair generation
+is relatively straight forward. The private key *x* is randomly generated 
+such that 1 < *x* < *q*. The public key *y* is then generated using modular
+exponentiation, using the formula *y* = *g*^*x* mod *p*. As discussed earlier,
+the discrete logarithm problem ensures that the public and private keys are 
+mathematically related and that the private key cannot (reasonably) be derived 
+from the public key.
+
+### Future Work
+
+To achieve a fully functional application, the work that remains is to 
+implement the signing and verification functions. The public and private 
+keys will be saved to separate files once generated. The user will then 
+be able to specify these files when running the sign and verify commands.
+An implementation of the SHA-1 hash function is also required to create
+a message digest when signing and verifying. This will ideally be 
+implemented in the application. An outside implementation of the SHA-1 
+hash function will only be utilized if it is absolutely necessary for 
+having the application fully functional and complete on time. 
+
 # References
+
+[1] https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.186-4.pdf
+[2] https://www.makeuseof.com/introduction-to-digital-signature-algorithm/
+[3] https://www.lifewire.com/what-is-sha-1-2626011
+[4] https://www.khanacademy.org/computing/computer-science/cryptography/modern-crypt/v/discrete-logarithm-problem
+[5] https://www.khanacademy.org/computing/computer-science/cryptography/modarithmetic/a/fast-modular-exponentiation

@@ -69,7 +69,7 @@ func generateKeys(params Parameters) (privateKey, publicKey) {
 
 	// calc priv
 	one := big.NewInt(1)
-	priv.Add(params.Q, one)
+	priv.Add(c, one)
 
 	// calc pub
 	pub.Exp(params.G, priv, params.P)
