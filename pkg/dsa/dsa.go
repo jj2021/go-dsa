@@ -6,10 +6,6 @@ import (
 	"math/big"
 )
 
-func main() {
-	fmt.Printf("dsa implementation\n")
-}
-
 type KeyPair struct {
 	Params  Parameters
 	Public  publicKey
@@ -20,8 +16,13 @@ type Parameters struct {
 	P, Q, G *big.Int
 }
 
-type privateKey *big.Int
-type publicKey *big.Int
+type privateKey struct {
+	*big.Int
+}
+
+type publicKey struct {
+	*big.Int
+}
 
 func GenerateKeyPair() KeyPair {
 	var pair KeyPair
@@ -53,7 +54,7 @@ func generateKeys(params Parameters) (privateKey, publicKey) {
 		_, err := rand.Read(b)
 		if err != nil {
 			fmt.Printf("Could not generate random bits: %v\n", err.Error())
-			return priv, pub
+			return privateKey{priv}, publicKey{pub}
 		}
 
 		c.SetBytes(b)
@@ -65,7 +66,6 @@ func generateKeys(params Parameters) (privateKey, publicKey) {
 			valid = true
 		}
 	}
-	fmt.Printf("c: %v\n", c)
 
 	// calc priv
 	one := big.NewInt(1)
@@ -74,7 +74,7 @@ func generateKeys(params Parameters) (privateKey, publicKey) {
 	// calc pub
 	pub.Exp(params.G, priv, params.P)
 
-	return priv, pub
+	return privateKey{priv}, publicKey{pub}
 }
 
 func generateGlobalParameters() Parameters {
@@ -177,6 +177,45 @@ func generateGlobalParameters() Parameters {
 
 func Sign() {
 
+}
+
+func generateMessageSecret(params Parameters) (*big.Int, *big.Int, error) {
+	k := new(big.Int)
+	kInverse := new(big.Int)
+
+	c := new(big.Int)
+	valid := false
+
+	for !valid {
+		n := 20
+		b := make([]byte, n)
+		_, err := rand.Read(b)
+		if err != nil {
+			fmt.Printf("Could not generate random bits: %v\n", err.Error())
+			return k, kInverse, err
+		}
+
+		c.SetBytes(b)
+
+		qSubTwo := new(big.Int)
+		two := big.NewInt(2)
+		qSubTwo.Sub(params.Q, two)
+		if c.Cmp(qSubTwo) != 1 {
+			valid = true
+		}
+	}
+	fmt.Printf("c: %v\n", c)
+
+	// calc k
+	one := big.NewInt(1)
+	k.Add(c, one)
+
+	// calc modular inverse of k
+	val := kInverse.ModInverse(k, params.Q)
+	if val == nil {
+		return k, kInverse, fmt.Errorf("Error: k is not relatively prime to q\n")
+	}
+	return k, kInverse, nil
 }
 
 func Verify() {
