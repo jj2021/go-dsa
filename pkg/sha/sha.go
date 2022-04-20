@@ -1,6 +1,7 @@
 package sha
 
 import (
+	"encoding/binary"
 	"fmt"
 )
 
@@ -21,11 +22,22 @@ func Hash(message []byte) {
 	fmt.Printf("num bits: %d\n", numBits)
 
 	// get message length and append to the padded message
+	lenBytes := make([]byte, 8)
 	messageLen := len(message) * 8
-	paddedMsgLen := int64(messageLen)
-	fmt.Printf("%064b", paddedMsgLen)
+
+	binary.BigEndian.PutUint64(lenBytes, uint64(messageLen))
+
+	paddedMessage = append(paddedMessage, lenBytes...)
+	fmt.Printf("%s\n", bits(paddedMessage))
+	fmt.Printf("num bits: %d\n", len(paddedMessage)*8)
+	//fmt.Printf("%064b\n", messageLen)
+	//fmt.Printf("%s\n", bits(lenBytes))
 
 	// break message into 512 bit chuncks
+
+	// break 512 bit chuncks into 32 bit 'words'
+
+	// generate more words until there are 80 words
 
 }
 
