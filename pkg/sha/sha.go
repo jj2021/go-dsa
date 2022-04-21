@@ -5,7 +5,15 @@ import (
 	"fmt"
 )
 
-func Hash(message []byte) {
+type word struct {
+	b [4]byte
+}
+
+type chunk struct {
+	w [80]word
+}
+
+func Digest(message []byte) {
 	// pre-process
 	// append a 1 at the end of the message
 	paddedMessage := append(message, 0x80)
@@ -34,8 +42,39 @@ func Hash(message []byte) {
 	//fmt.Printf("%s\n", bits(lenBytes))
 
 	// break message into 512 bit chuncks
+	bitsInChunk := 512
+	bitsInByte := 8
+	bytesInChunk := bitsInChunk / bitsInByte
 
-	// break 512 bit chuncks into 32 bit 'words'
+	numChunks := (len(paddedMessage) * bitsInByte) / bitsInChunk
+	fmt.Printf("num chunks: %v\n", numChunks)
+
+	chunks := make([]chunk, numChunks)
+	for i := 0; i < numChunks; i++ {
+		chunkSlice := paddedMessage[i*bytesInChunk : (i+1)*bytesInChunk]
+		//fmt.Printf("slice %v:\n%v\n", i, bits(chunkSlice))
+
+		var nextChunk chunk
+		initialWords := 16
+		wordsInChunk := len(nextChunk.w)
+		fmt.Printf("words in chunk: %v\n", wordsInChunk)
+
+		// break 512 bit chuncks into 32 bit 'words'
+		for j := 0; j < initialWords; j++ {
+			var nextWord word
+			var wordbytes [4]byte
+			bytesInWord := len(nextWord.b)
+
+			copy(wordbytes[:], chunkSlice[j*bytesInWord:(j+1)*bytesInWord])
+
+			nextWord = word{wordbytes}
+
+			// add word to chunk
+			nextChunk.w[j] = nextWord
+			//fmt.Printf(bits(nextChunk.w[j].b[:]))
+		}
+		chunks = append(chunks, nextChunk)
+	}
 
 	// generate more words until there are 80 words
 
