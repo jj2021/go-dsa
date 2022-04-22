@@ -1,7 +1,11 @@
 package sha
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestHash(t *testing.T) {
-	Digest([]byte("abc"))
+	digest := Digest([]byte("abc"))
+	fmt.Printf("Digest:\n%x", digest)
 }
