@@ -181,7 +181,7 @@ func generateGlobalParameters() Parameters {
 	return params
 }
 
-func Sign(content []byte, pubKey publicKey, params Parameters) Signature {
+func Sign(content []byte, privKey privateKey, params Parameters) Signature {
 	var signature Signature
 	r := big.NewInt(0)
 	s := big.NewInt(0)
@@ -205,7 +205,7 @@ func Sign(content []byte, pubKey publicKey, params Parameters) Signature {
 		sumZxr := new(big.Int)
 		kInvZxr := new(big.Int)
 
-		xr.Mul(pubKey.Int, r)
+		xr.Mul(privKey.Int, r)
 		sumZxr.Add(z, xr)
 		kInvZxr.Mul(kInv, sumZxr)
 		s.Mod(kInvZxr, params.Q)
