@@ -254,6 +254,33 @@ func generateMessageSecret(params Parameters) (*big.Int, *big.Int, error) {
 	return k, kInverse, nil
 }
 
-func Verify() {
+func Verify(sig Signature, content []byte, pubKey publicKey, params Parameters) (bool, error) {
+	// basic signature validity check
+	if sig.r.Cmp(big.NewInt(0)) == 0 || sig.s.Cmp(big.NewInt(0)) == 0 {
+		return false, fmt.Errorf("Error: Invalid signature fields")
+	}
+
+	sInv := new(big.Int)
+	w := new(big.Int)
+	z := new(big.Int)
+	zw := new(big.Int)
+	rw := new(big.Int)
+	u1 := new(big.Int)
+	u2 := new(big.Int)
+	// v := new(big.Int)
+
+	sInv.ModInverse(sig.s, params.Q)
+	w.Mod(sInv, params.Q)
+
+	digest := sha.Digest(content)
+	z.SetBytes(digest)
+
+	zw.Mul(z, w)
+	u1.Mod(zw, params.Q)
+
+	rw.Mul(sig.r, w)
+	u2.Mod(rw, params.Q)
+
+	return true, nil
 
 }
