@@ -3,6 +3,7 @@ package dsa
 import (
 	"crypto/rand"
 	"fmt"
+	"godsa/pkg/sha"
 	"math/big"
 )
 
@@ -22,6 +23,11 @@ type privateKey struct {
 
 type publicKey struct {
 	*big.Int
+}
+
+type Signature struct {
+	r *big.Int
+	s *big.Int
 }
 
 func GenerateKeyPair() KeyPair {
@@ -175,8 +181,38 @@ func generateGlobalParameters() Parameters {
 	return params
 }
 
-func Sign() {
+func Sign(content []byte, pubKey publicKey, params Parameters) Signature {
+	var signature Signature
+	r := big.NewInt(0)
+	s := big.NewInt(0)
+	z := new(big.Int)
 
+	for r.Cmp(big.NewInt(0)) == 0 || s.Cmp(big.NewInt(0)) == 0 {
+		k, kInv, err := generateMessageSecret(params)
+		if err != nil {
+			fmt.Printf("Could not generate message secret: %s\n", err.Error())
+			return signature
+		}
+
+		digest := sha.Digest(content)
+
+		r.Exp(params.G, k, params.P)
+		r.Mod(r, params.Q)
+
+		z.SetBytes(digest)
+
+		xr := new(big.Int)
+		sumZxr := new(big.Int)
+		kInvZxr := new(big.Int)
+
+		xr.Mul(pubKey.Int, r)
+		sumZxr.Add(z, xr)
+		kInvZxr.Mul(kInv, sumZxr)
+		s.Mod(kInvZxr, params.Q)
+	}
+
+	signature = Signature{r: r, s: s}
+	return signature
 }
 
 func generateMessageSecret(params Parameters) (*big.Int, *big.Int, error) {
