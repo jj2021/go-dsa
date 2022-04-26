@@ -10,6 +10,7 @@ import (
 	"godsa/pkg/dsa"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // keygenCmd represents the keygen command
@@ -23,11 +24,35 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("keygen called")
+		fmt.Println("Generating Keys... This may take a minute")
 		pair := dsa.GenerateKeyPair()
-		fmt.Printf("params: %+v\n", pair.Params)
-		fmt.Printf("Private: %+v\n", pair.Private)
-		fmt.Printf("Public: %+v\n", pair.Public)
+		/*
+			fmt.Printf("params: %+v\n", pair.Params)
+			fmt.Printf("Private: %+v\n", pair.Private)
+			fmt.Printf("Public: %+v\n", pair.Public)
+		*/
+
+		// write public key file
+		pubfile := viper.New()
+		pubfile.SetConfigType("yaml")
+
+		pubfile.Set("p", pair.Params.P)
+		pubfile.Set("q", pair.Params.Q)
+		pubfile.Set("g", pair.Params.G)
+		pubfile.Set("y", pair.Public.Int)
+
+		pubfile.WriteConfigAs("./dsa_pub.yaml")
+
+		// write private key file
+		privfile := viper.New()
+		privfile.SetConfigType("yaml")
+
+		privfile.Set("p", pair.Params.P)
+		privfile.Set("q", pair.Params.Q)
+		privfile.Set("g", pair.Params.G)
+		privfile.Set("x", pair.Private.Int)
+
+		privfile.WriteConfigAs("./dsa.yaml")
 	},
 }
 
