@@ -267,7 +267,7 @@ func Verify(sig Signature, content []byte, pubKey publicKey, params Parameters) 
 	rw := new(big.Int)
 	u1 := new(big.Int)
 	u2 := new(big.Int)
-	// v := new(big.Int)
+	v := new(big.Int)
 
 	sInv.ModInverse(sig.s, params.Q)
 	w.Mod(sInv, params.Q)
@@ -281,6 +281,17 @@ func Verify(sig Signature, content []byte, pubKey publicKey, params Parameters) 
 	rw.Mul(sig.r, w)
 	u2.Mod(rw, params.Q)
 
-	return true, nil
+	v.Exp(params.G, u1, params.P)
+	u2.Exp(pubKey.Int, u2, params.P)
+
+	v.Mul(v, u2)
+	v.Mod(v, params.P)
+	v.Mod(v, params.Q)
+
+	if v.Cmp(sig.r) == 0 {
+		return true, nil
+	}
+
+	return false, fmt.Errorf("Error: Signature does not match")
 
 }
