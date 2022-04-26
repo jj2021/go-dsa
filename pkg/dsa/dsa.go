@@ -26,8 +26,16 @@ type publicKey struct {
 }
 
 type Signature struct {
-	r *big.Int
-	s *big.Int
+	R *big.Int
+	S *big.Int
+}
+
+func NewPrivateKey(key *big.Int) privateKey {
+	return privateKey{key}
+}
+
+func NewPublicKey(key *big.Int) publicKey {
+	return publicKey{key}
 }
 
 func GenerateKeyPair() KeyPair {
@@ -211,7 +219,7 @@ func Sign(content []byte, privKey privateKey, params Parameters) Signature {
 		s.Mod(kInvZxr, params.Q)
 	}
 
-	signature = Signature{r: r, s: s}
+	signature = Signature{R: r, S: s}
 	return signature
 }
 
@@ -256,7 +264,7 @@ func generateMessageSecret(params Parameters) (*big.Int, *big.Int, error) {
 
 func Verify(sig Signature, content []byte, pubKey publicKey, params Parameters) (bool, error) {
 	// basic signature validity check
-	if sig.r.Cmp(big.NewInt(0)) == 0 || sig.s.Cmp(big.NewInt(0)) == 0 {
+	if sig.R.Cmp(big.NewInt(0)) == 0 || sig.S.Cmp(big.NewInt(0)) == 0 {
 		return false, fmt.Errorf("Error: Invalid signature fields")
 	}
 
@@ -269,7 +277,7 @@ func Verify(sig Signature, content []byte, pubKey publicKey, params Parameters) 
 	u2 := new(big.Int)
 	v := new(big.Int)
 
-	sInv.ModInverse(sig.s, params.Q)
+	sInv.ModInverse(sig.S, params.Q)
 	w.Mod(sInv, params.Q)
 
 	digest := sha.Digest(content)
@@ -278,7 +286,7 @@ func Verify(sig Signature, content []byte, pubKey publicKey, params Parameters) 
 	zw.Mul(z, w)
 	u1.Mod(zw, params.Q)
 
-	rw.Mul(sig.r, w)
+	rw.Mul(sig.R, w)
 	u2.Mod(rw, params.Q)
 
 	v.Exp(params.G, u1, params.P)
@@ -288,7 +296,7 @@ func Verify(sig Signature, content []byte, pubKey publicKey, params Parameters) 
 	v.Mod(v, params.P)
 	v.Mod(v, params.Q)
 
-	if v.Cmp(sig.r) == 0 {
+	if v.Cmp(sig.R) == 0 {
 		return true, nil
 	}
 
