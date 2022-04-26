@@ -240,7 +240,7 @@ func generateMessageSecret(params Parameters) (*big.Int, *big.Int, error) {
 			valid = true
 		}
 	}
-	fmt.Printf("c: %v\n", c)
+	// fmt.Printf("c: %v\n", c)
 
 	// calc k
 	one := big.NewInt(1)
