@@ -5,6 +5,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"encoding/hex"
 	"fmt"
 
 	"godsa/pkg/dsa"
@@ -36,10 +37,16 @@ to quickly create a Cobra application.`,
 		pubfile := viper.New()
 		pubfile.SetConfigType("yaml")
 
-		pubfile.Set("p", pair.Params.P)
-		pubfile.Set("q", pair.Params.Q)
-		pubfile.Set("g", pair.Params.G)
-		pubfile.Set("y", pair.Public.Int)
+		phex := hex.EncodeToString(pair.Params.P.Bytes())
+		qhex := hex.EncodeToString(pair.Params.Q.Bytes())
+		ghex := hex.EncodeToString(pair.Params.G.Bytes())
+		yhex := hex.EncodeToString(pair.Public.Bytes())
+		xhex := hex.EncodeToString(pair.Private.Bytes())
+
+		pubfile.Set("p", phex)
+		pubfile.Set("q", qhex)
+		pubfile.Set("g", ghex)
+		pubfile.Set("y", yhex)
 
 		pubfile.WriteConfigAs("./dsa_pub.yaml")
 
@@ -47,10 +54,10 @@ to quickly create a Cobra application.`,
 		privfile := viper.New()
 		privfile.SetConfigType("yaml")
 
-		privfile.Set("p", pair.Params.P)
-		privfile.Set("q", pair.Params.Q)
-		privfile.Set("g", pair.Params.G)
-		privfile.Set("x", pair.Private.Int)
+		privfile.Set("p", phex)
+		privfile.Set("q", qhex)
+		privfile.Set("g", ghex)
+		privfile.Set("x", xhex)
 
 		privfile.WriteConfigAs("./dsa.yaml")
 	},

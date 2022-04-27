@@ -5,6 +5,7 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"encoding/hex"
 	"fmt"
 	"godsa/pkg/dsa"
 	"io/ioutil"
@@ -20,7 +21,6 @@ var signCmd = &cobra.Command{
 	Short: "Sign a file with a dsa private key",
 	Long:  `Signs a specified file with the dsa private key found in the dsa.yaml file.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("sign called")
 
 		// read file content
 		file, err := cmd.Flags().GetString("file")
@@ -50,20 +50,49 @@ var signCmd = &cobra.Command{
 		}
 
 		// sign content
-		p := privfile.GetInt64("p")
-		g := privfile.GetInt64("g")
-		q := privfile.GetInt64("q")
-		x := privfile.GetInt64("x")
-		params := dsa.Parameters{P: big.NewInt(p), G: big.NewInt(g), Q: big.NewInt(q)}
-		privkey := dsa.NewPrivateKey(big.NewInt(x))
+		phex := privfile.GetString("p")
+		ghex := privfile.GetString("g")
+		qhex := privfile.GetString("q")
+		xhex := privfile.GetString("x")
+
+		p, err := hex.DecodeString(phex)
+		if err != nil {
+			fmt.Printf("Error decoding private key file")
+			return
+		}
+		g, err := hex.DecodeString(ghex)
+		if err != nil {
+			fmt.Printf("Error decoding private key file")
+			return
+		}
+		q, err := hex.DecodeString(qhex)
+		if err != nil {
+			fmt.Printf("Error decoding private key file")
+			return
+		}
+		x, err := hex.DecodeString(xhex)
+		if err != nil {
+			fmt.Printf("Error decoding private key file")
+			return
+		}
+
+		params := dsa.Parameters{P: new(big.Int).SetBytes(p), G: new(big.Int).SetBytes(g), Q: new(big.Int).SetBytes(q)}
+		privkey := dsa.NewPrivateKey(new(big.Int).SetBytes(x))
+		// fmt.Printf("%+v\n", params)
+		// fmt.Printf("%+v\n", privkey)
+
 		signature := dsa.Sign(content, privkey, params)
 
 		// write signature file
+
 		sigfile := viper.New()
 		sigfile.SetConfigType("yaml")
 
-		sigfile.Set("r", signature.R)
-		sigfile.Set("s", signature.S)
+		rhex := hex.EncodeToString(signature.R.Bytes())
+		shex := hex.EncodeToString(signature.S.Bytes())
+
+		sigfile.Set("r", rhex)
+		sigfile.Set("s", shex)
 
 		sigfile.WriteConfigAs("./dsa_signature.yaml")
 	},
